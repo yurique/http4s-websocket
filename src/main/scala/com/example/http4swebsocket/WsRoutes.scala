@@ -17,8 +17,10 @@ class WsRoutes[F[_]](topic: Topic[F, String])(implicit F: Async[F]) {
       topic
         .subscribe(1).map(WebSocketFrame.Text(_))
         .concurrently(
-          fs2.Stream.awakeDelay(1.seconds).evalTap(_ => topic.publish1("Hello!").void) >>
-            fs2.Stream.eval(in.compile.drain.recover { case NonFatal(_) => () })
+          fs2.Stream.awakeDelay(1.seconds).evalTap(_ => topic.publish1("Hello!").void)
+        )
+        .concurrently(
+          fs2.Stream.eval(in.compile.drain.recover { case NonFatal(_) => () })
         )
 
   def routes(ws: WebSocketBuilder2[F]): HttpRoutes[F] = {
